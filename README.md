@@ -4,6 +4,23 @@ A **production-ready starter template** for building modern, full-stack web appl
 
 ---
 
+## 🌿 Branches
+
+Each branch is a **different version** of the template, tailored for a specific stack. Pick the branch that fits your needs:
+
+| Branch                              | Description                                                           |
+| ----------------------------------- | --------------------------------------------------------------------- |
+| `master`                            | Base template — minimal setup                                         |
+| **`nextjs16-betterauth-prisma`** ⬅️ | Next.js 16 + Better Auth + Prisma + shadcn/ui + Docker (you are here) |
+
+> **Tip:** Clone a specific branch to get the exact template version you want:
+>
+> ```bash
+> git clone -b nextjs16-betterauth-prisma https://github.com/Tejas-pr/bun-turbo-nextjs-betterauth-prisma.git
+> ```
+
+---
+
 ## ✨ Features
 
 - ⚡ **Bun** — Ultra-fast JavaScript runtime and package manager
@@ -47,7 +64,8 @@ bun-turbo-nextjs-betterauth-prisma/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/Tejas-pr/bun-turbo-nextjs-betterauth-prisma.git
+# Clone the specific template branch
+git clone -b nextjs16-betterauth-prisma https://github.com/Tejas-pr/bun-turbo-nextjs-betterauth-prisma.git
 cd bun-turbo-nextjs-betterauth-prisma
 ```
 
