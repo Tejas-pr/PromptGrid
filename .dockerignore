@@ -1,0 +1,13 @@
+# Ignore node_modules and build output
+node_modules
+.next
+.turbo
+dist
+.git
+.gitignore
+*.md
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.vscode

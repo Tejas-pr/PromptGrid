@@ -2,7 +2,11 @@ import { prisma } from "@ion/database";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
-const trustedOrigins = [process.env.BETTER_AUTH_URL as string, process.env.MAINORIGINS2 as string, process.env.MAINORIGINS3 as string]
+const trustedOrigins = [
+    process.env.BETTER_AUTH_URL,
+    process.env.MAINORIGINS2,
+    process.env.MAINORIGINS3
+].filter(Boolean) as string[];
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -16,6 +20,10 @@ export const auth = betterAuth({
         github: {
             clientId: process.env.GITHUB_CLIENT_ID as string,
             clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+        },
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         },
     },
     session: {
