@@ -5,7 +5,7 @@ import { PrismaClient } from "../generated/client";
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 // 1. Create the Pool specifically for the adapter
-const connectionString = process.env.DATABASE_URL;
+const connectionString = import.meta.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString

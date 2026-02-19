@@ -16,29 +16,3 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  # Next.js Application
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      DATABASE_URL: postgresql://ion:ion@db:5432/ion
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
-      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
-      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      MAINORIGINS2: ${MAINORIGINS2}
-      MAINORIGINS3: ${MAINORIGINS3}
-    depends_on:
-      db:
-        condition: service_healthy
-
-volumes:
-  postgres_data:
-    driver: local
