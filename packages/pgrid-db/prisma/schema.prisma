@@ -7,19 +7,22 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output = "../generated/client"
+  output   = "../generated/client"
 }
 
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id                 String               @id
+  name               String
+  email              String
+  emailVerified      Boolean              @default(false)
+  image              String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  sessions           Session[]
+  accounts           Account[]
+  apiKeys            ApiKey[]
+  onrampTransactions OnrampTransactions[]
+  conversions        Conversations[]
 
   @@unique([email])
   @@map("user")
@@ -71,4 +74,72 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model ApiKey {
+  id              String          @id
+  userId          String
+  name            String
+  apiKey          String          @unique
+  disabled        Boolean         @default(false)
+  deleted         Boolean         @default(false)
+  lastUsed        DateTime?
+  creditsConsumed Int             @default(0)
+  user            User            @relation(fields: [userId], references: [id])
+  consversations  Conversations[]
+}
+
+model Company {
+  id      String  @id
+  name    String
+  website String
+  models  Model[]
+}
+
+model Model {
+  id                    String                 @id
+  name                  String
+  companyId             String
+  company               Company                @relation(fields: [companyId], references: [id])
+  modelProviderMappings ModelProviderMapping[]
+}
+
+model Provider {
+  id                    String                 @id
+  name                  String
+  website               String
+  modelProviderMappings ModelProviderMapping[]
+}
+
+model ModelProviderMapping {
+  id              String          @id
+  modelId         String
+  providerId      String
+  inputTokenCost  Int
+  outputTokenCost Int
+  model           Model           @relation(fields: [modelId], references: [id])
+  provider        Provider        @relation(fields: [providerId], references: [id])
+  conversions     Conversations[]
+}
+
+model OnrampTransactions {
+  id     String @id
+  userId String
+  amount Int
+  status String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Conversations {
+  id                     String               @id
+  userId                 String
+  apiKeysId              String
+  modelProviderMappingId String
+  input                  String
+  output                 String
+  inputTokenCount        Int
+  outputTokenCount       Int
+  user                   User                 @relation(fields: [userId], references: [id])
+  apiKey                 ApiKey               @relation(fields: [apiKeysId], references: [id])
+  modelProviderMapping   ModelProviderMapping @relation(fields: [modelProviderMappingId], references: [id])
 }
