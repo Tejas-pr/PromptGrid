@@ -99,6 +99,7 @@ model Company {
 model Model {
   id                    String                 @id
   name                  String
+  slug                  String
   companyId             String
   company               Company                @relation(fields: [companyId], references: [id])
   modelProviderMappings ModelProviderMapping[]
