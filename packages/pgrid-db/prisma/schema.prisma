@@ -77,7 +77,7 @@ model Verification {
 }
 
 model ApiKey {
-  id              String          @id
+  id              String          @id @default(cuid())
   userId          String
   name            String
   apiKey          String          @unique
@@ -90,14 +90,14 @@ model ApiKey {
 }
 
 model Company {
-  id      String  @id
+  id      String  @id @default(cuid())
   name    String
   website String
   models  Model[]
 }
 
 model Model {
-  id                    String                 @id
+  id                    String                 @id @default(cuid())
   name                  String
   slug                  String
   companyId             String
@@ -106,14 +106,14 @@ model Model {
 }
 
 model Provider {
-  id                    String                 @id
+  id                    String                 @id @default(cuid())
   name                  String
   website               String
   modelProviderMappings ModelProviderMapping[]
 }
 
 model ModelProviderMapping {
-  id              String          @id
+  id              String          @id @default(cuid())
   modelId         String
   providerId      String
   inputTokenCost  Int
@@ -124,7 +124,7 @@ model ModelProviderMapping {
 }
 
 model OnrampTransactions {
-  id     String @id
+  id     String @id @default(cuid())
   userId String
   amount Int
   status String
@@ -132,7 +132,7 @@ model OnrampTransactions {
 }
 
 model Conversations {
-  id                     String               @id
+  id                     String               @id @default(cuid())
   userId                 String
   apiKeysId              String
   modelProviderMappingId String

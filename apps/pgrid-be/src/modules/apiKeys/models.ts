@@ -16,27 +16,37 @@ export namespace ApiKeyModel {
     export type createApiKeyResponse = typeof createApiKeyResponse.static;
 
     // disableApiKeySchema
-    export const disableApiKeySchema = t.Object({
-        id: t.String()
+    export const updateDisableApiKeySchema = t.Object({
+        id: t.String(),
+        disable: t.Boolean()
     });
 
-    export type disableApiKeySchema = typeof disableApiKeySchema.static;
+    export type updateDisableApiKeySchema = typeof updateDisableApiKeySchema.static;
 
-    export const disableApiKeyResponse = t.Object({
-        message: t.Literal("Disabled API key successfully!")
+    export const updateDisableApiKeyResponse = t.Object({
+        message: t.Literal("Update API key successfully!")
     });
 
-    export type disableApiKeyResponse = typeof disableApiKeyResponse.static;
+    export type updateDisableApiKeyResponse = typeof updateDisableApiKeyResponse.static;
+
+    export const updateDisableApiKeyFailedResponse = t.Object({
+        message: t.Literal("Updating API key unsuccessfully!")
+    });
+
+    export type updateDisableApiKeyFailedResponse = typeof updateDisableApiKeyFailedResponse.static;
 
     // get api key
-    export const getApiKeyResponse = t.Object({
-        name: t.String(),
-        apiKey: t.String(), // this should be some part of it not full api key.
-        lastUsed: t.String(),
-        creditsConsumed: t.String(),
+    export const getApiKeyResponseSchema = t.Object({
+        apiKeys: t.Array(t.Object({
+            id: t.String(),
+            name: t.String(),
+            apiKey: t.String(), // this should be some part of it not full api key.
+            lastUsed: t.Nullable(t.Date()),
+            creditsConsumed: t.Number(),
+        }))
     });
 
-    export type getApiKeyResponse = typeof getApiKeyResponse.static;
+    export type getApiKeyResponseSchema = typeof getApiKeyResponseSchema.static;
 
     // delete
     export const deleteApiKeyResponse = t.Object({
@@ -44,4 +54,10 @@ export namespace ApiKeyModel {
     });
 
     export type deleteApiKeyResponse = typeof deleteApiKeyResponse.static;
+
+    export const deleteApiKeyFailedResponse = t.Object({
+        message: t.Literal("deleting API key unsuccessfully!")
+    });
+
+    export type deleteApiKeyFailedResponse = typeof deleteApiKeyFailedResponse.static;
 }
