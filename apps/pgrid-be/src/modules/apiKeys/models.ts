@@ -43,6 +43,7 @@ export namespace ApiKeyModel {
             apiKey: t.String(), // this should be some part of it not full api key.
             lastUsed: t.Nullable(t.Date()),
             creditsConsumed: t.Number(),
+            disabled: t.Boolean(),
         }))
     });
 

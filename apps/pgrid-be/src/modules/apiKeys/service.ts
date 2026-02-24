@@ -44,7 +44,8 @@ export abstract class ApiKeyService {
                 apiKey: true,
                 name: true,
                 creditsConsumed: true,
-                lastUsed: true
+                lastUsed: true,
+                disabled: true
             }
         });
 
