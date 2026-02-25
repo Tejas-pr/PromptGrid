@@ -187,7 +187,7 @@ const Home = () => {
       {/* Footer */}
       <footer className="border-t border-border/40 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © 2026 PromptGrid. Built for developers, by developers.
+          © 2026 PromptGrid. Built for developers, by Tejas.
         </div>
       </footer>
     </div>

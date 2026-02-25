@@ -2,8 +2,10 @@ import { Routes, Route } from "react-router";
 import Home from "./Home";
 import LoginPage from "./components/auth/login";
 import SignupPage from "./components/auth/signup";
-import type { App } from "pgrid-be/app"; 
-import Dashboard from "./components/Dashboard";
+import DashboardLayout from "./components/dashboard/Dashboard";
+import DashboardHome from "./components/dashboard/pages/DashboardHome";
+import ApiKeys from "./components/dashboard/pages/ApiKeys";
+import Credits from "./components/dashboard/pages/Credits";
 
 function App() {
   return (
@@ -12,7 +14,12 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardHome />} />
+          <Route path="api-keys" element={<ApiKeys />} />
+          <Route path="credits" element={<Credits />} />  
+        </Route>
       </Routes>
     </>
   );
