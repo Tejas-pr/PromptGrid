@@ -27,6 +27,16 @@
         "bun-types": "latest",
       },
     },
+    "apps/pgrid-be-llms": {
+      "name": "pgrid-be-llms",
+      "version": "1.0.50",
+      "dependencies": {
+        "elysia": "latest",
+      },
+      "devDependencies": {
+        "bun-types": "latest",
+      },
+    },
     "apps/pgrid-react": {
       "name": "pgrid-react",
       "version": "0.0.0",
@@ -1643,6 +1653,8 @@
     "pgpass": ["pgpass@1.0.5", "", { "dependencies": { "split2": "^4.1.0" } }, "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug=="],
 
     "pgrid-be": ["pgrid-be@workspace:apps/pgrid-be"],
+
+    "pgrid-be-llms": ["pgrid-be-llms@workspace:apps/pgrid-be-llms"],
 
     "pgrid-react": ["pgrid-react@workspace:apps/pgrid-react"],
 
