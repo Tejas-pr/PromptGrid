@@ -6,6 +6,7 @@ import DashboardLayout from "./components/dashboard/Dashboard";
 import DashboardHome from "./components/dashboard/pages/DashboardHome";
 import ApiKeys from "./components/dashboard/pages/ApiKeys";
 import Credits from "./components/dashboard/pages/Credits";
+import Chat from "./components/dashboard/pages/Chat";
 
 function App() {
   return (
@@ -15,8 +16,9 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
 
-        <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardHome />} />
+        <Route path="/chat" element={<DashboardLayout />}>
+          <Route index element={<Chat />} />  
+          <Route path="dashboard" element={<DashboardHome />} />
           <Route path="api-keys" element={<ApiKeys />} />
           <Route path="credits" element={<Credits />} />  
         </Route>

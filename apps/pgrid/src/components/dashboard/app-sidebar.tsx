@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  BotMessageSquare,
   Frame,
   HandCoins,
   Key,
@@ -17,18 +18,23 @@ import {
 const data = {
   projects: [
     {
+      name: "Chat",
+      url: "/chat",
+      icon: BotMessageSquare,
+    },
+    {
       name: "Dashboard",
-      url: "/dashboard",
+      url: "/chat/dashboard",
       icon: Frame,
     },
     {
       name: "Api Keys",
-      url: "/dashboard/api-keys",
+      url: "/chat/api-keys",
       icon: Key,
     },
     {
       name: "Credits",
-      url: "/dashboard/credits",
+      url: "/chat/credits",
       icon: HandCoins,
     },
   ],
