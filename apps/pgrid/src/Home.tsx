@@ -37,8 +37,8 @@ const Home = () => {
             </p>
           </div>
           <div className="flex justify-center items-center gap-5">
-            <Button onClick={() => navigate('/dashboard')} variant="outline" size="lg">
-              Dashboard
+            <Button onClick={() => navigate('/chat')} variant="outline" size="lg">
+              Chat
             </Button>
             <Button onClick={handleLogout} variant="outline" size="lg">
               Logout
