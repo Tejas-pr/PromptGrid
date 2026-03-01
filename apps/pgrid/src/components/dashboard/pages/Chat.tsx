@@ -1,92 +1,183 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Send, Loader2 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/select";
+import { Send, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { chatWithLLM } from "@/api/llm.api";
+import { useChatData } from "@/hooks/useChatData";
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  isTyping?: boolean;
 }
 
-const HARDCODED_PROVIDERS = [
-  { id: 'openai', name: 'OpenAI' },
-  { id: 'anthropic', name: 'Anthropic' },
-  { id: 'groq', name: 'Groq' },
-];
+// ── Typing animation hook ──────────────────────────────────────────────
+function useTypingEffect(
+  fullText: string,
+  enabled: boolean,
+  speed: number = 12,
+) {
+  const [displayed, setDisplayed] = useState(fullText);
+  const [isDone, setIsDone] = useState(!enabled);
 
-const HARDCODED_MODELS: Record<string, Array<{ id: string; name: string }>> = {
-  openai: [
-    { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-    { id: 'gpt-4', name: 'GPT-4' },
-    { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo' },
-  ],
-  anthropic: [
-    { id: 'claude-3-opus', name: 'Claude 3 Opus' },
-    { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet' },
-    { id: 'claude-3-haiku', name: 'Claude 3 Haiku' },
-  ],
-  groq: [
-    { id: 'mixtral-8x7b', name: 'Mixtral 8x7B' },
-    { id: 'llama-2-70b', name: 'Llama 2 70B' },
-    { id: 'gemma-7b', name: 'Gemma 7B' },
-  ],
-};
+  useEffect(() => {
+    if (!enabled) {
+      setDisplayed(fullText);
+      setIsDone(true);
+      return;
+    }
 
+    setDisplayed("");
+    setIsDone(false);
+    let i = 0;
+
+    const interval = setInterval(() => {
+      i++;
+      setDisplayed(fullText.slice(0, i));
+      if (i >= fullText.length) {
+        clearInterval(interval);
+        setIsDone(true);
+      }
+    }, speed);
+
+    return () => clearInterval(interval);
+  }, [fullText, enabled, speed]);
+
+  return { displayed, isDone };
+}
+
+// ── Single message bubble ──────────────────────────────────────────────
+function MessageBubble({
+  message,
+  isLatestAssistant,
+}: {
+  message: Message;
+  isLatestAssistant: boolean;
+}) {
+  const shouldAnimate =
+    message.role === "assistant" && isLatestAssistant && !!message.isTyping;
+  const { displayed, isDone } = useTypingEffect(message.content, shouldAnimate);
+
+  const text = shouldAnimate ? displayed : message.content;
+
+  return (
+    <div
+      className={`flex ${
+        message.role === "user" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <div className="max-w-lg">
+        <div
+          className={`rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
+            message.role === "user"
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted text-foreground"
+          }`}
+        >
+          {text}
+          {shouldAnimate && !isDone && (
+            <span className="ml-0.5 inline-block h-4 w-[2px] animate-pulse bg-current align-text-bottom" />
+          )}
+        </div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          {message.timestamp.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Helper: extract content from LLM response ─────────────────────────
+function extractContent(llmResponse: any): string {
+  // Structure: { completions: { choices: [{ message: { content } }] } }
+  try {
+    const content = llmResponse?.completions?.choices?.[0]?.message?.content;
+    if (typeof content === "string") return content;
+  } catch {
+    // fall through
+  }
+
+  // Fallback paths
+  if (typeof llmResponse?.response === "string") return llmResponse.response;
+  if (typeof llmResponse?.content === "string") return llmResponse.content;
+
+  return JSON.stringify(llmResponse);
+}
+
+// ── Main Chat component ────────────────────────────────────────────────
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [selectedProvider, setSelectedProvider] = useState('openai');
-  const [selectedModel, setSelectedModel] = useState('gpt-4-turbo');
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const availableModels = HARDCODED_MODELS[selectedProvider] || [];
+  const {
+    apiKeys,
+    models,
+    provider,
+    selectedApiKey,
+    selectedModel,
+    selectedApiKeyId,
+    setSelectedApiKeyId,
+    selectedModelId,
+    setSelectedModelId,
+    isLoadingInitial,
+    isLoadingProvider,
+    error,
+  } = useChatData();
+
   const hasMessages = messages.length > 0;
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  const handleProviderChange = (providerId: string) => {
-    setSelectedProvider(providerId);
-    setSelectedModel(HARDCODED_MODELS[providerId]?.[0]?.id ?? '');
-  };
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = useCallback(async () => {
+    if (!inputMessage.trim() || !selectedApiKey || !selectedModel) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
-      role: 'user',
+      role: "user",
       content: inputMessage,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInputMessage('');
+    setInputMessage("");
     setIsLoading(true);
 
     try {
-      // Mock response (replace with backend later)
-      await new Promise((r) => setTimeout(r, 1000));
+      const allMessages = [
+        ...messages.map((m) => ({ content: m.content })),
+        { content: inputMessage },
+      ];
+
+      const llmResponse = await chatWithLLM(selectedApiKey.apiKey, {
+        slug: selectedModel.slug,
+        messages: allMessages,
+      });
 
       const assistantMessage: Message = {
         id: crypto.randomUUID(),
-        role: 'assistant',
-        content: `Mock response from ${selectedModel} via ${selectedProvider}.`,
+        role: "assistant",
+        content: extractContent(llmResponse),
         timestamp: new Date(),
+        isTyping: true,
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -95,55 +186,60 @@ export default function Chat() {
         ...prev,
         {
           id: crypto.randomUUID(),
-          role: 'assistant',
-          content: 'Something went wrong. Please try again.',
+          role: "assistant",
+          content: "Something went wrong. Please try again.",
           timestamp: new Date(),
         },
       ]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputMessage, selectedApiKey, selectedModel, messages]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage],
+  );
+
+  const canSend =
+    !isLoading &&
+    inputMessage.trim().length > 0 &&
+    !!selectedApiKey &&
+    !!selectedModel;
+
+  // Find the last assistant message id for typing animation
+  const lastAssistantId = [...messages]
+    .reverse()
+    .find((m) => m.role === "assistant")?.id;
 
   return (
     <div className="flex h-[92vh] flex-col bg-background px-8">
-
       {/* Messages */}
       <div className="flex-1 overflow-y-auto no-scrollbar">
-        {hasMessages ? (
+        {isLoadingInitial ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Loading…
+            </div>
+          </div>
+        ) : error ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-sm text-destructive">{error}</p>
+          </div>
+        ) : hasMessages ? (
           <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
             {messages.map((message) => (
-              <div
+              <MessageBubble
                 key={message.id}
-                className={`flex ${
-                  message.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <div className="max-w-lg">
-                  <div
-                    className={`rounded-2xl px-4 py-2 text-sm leading-relaxed shadow-sm ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </div>
-                </div>
-              </div>
+                message={message}
+                isLatestAssistant={message.id === lastAssistantId}
+              />
             ))}
 
             {isLoading && (
@@ -161,8 +257,8 @@ export default function Chat() {
           <div className="flex h-full items-center justify-center">
             <div className="space-y-3 text-center">
               <h2 className="text-2xl font-semibold">Start a conversation</h2>
-              <p className="tedivxt-sm text-muted-foreground">
-                Choose a provider and model below, then send your first message.
+              <p className="text-sm text-muted-foreground">
+                Choose an API key and model below, then send your first message.
               </p>
             </div>
           </div>
@@ -172,7 +268,6 @@ export default function Chat() {
       {/* Input + Controls */}
       <div className="border-t border-border bg-background">
         <div className="w-full space-y-3 p-0">
-
           {/* Input */}
           <div className="flex items-center justify-center gap-3 rounded-xl border border-border bg-card p-2 shadow-sm">
             <Textarea
@@ -181,15 +276,11 @@ export default function Chat() {
               onKeyDown={handleKeyDown}
               placeholder="Message PromptGrid…"
               rows={1}
-              disabled={isLoading}
+              disabled={isLoading || !selectedApiKey}
               className="flex-1 resize-none border-0 bg-transparent text-sm text-foreground placeholder-muted-foreground outline-none"
             />
 
-            <Button
-              size="icon"
-              onClick={handleSendMessage}
-              disabled={isLoading || !inputMessage.trim()}
-            >
+            <Button size="icon" onClick={handleSendMessage} disabled={!canSend}>
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -198,33 +289,49 @@ export default function Chat() {
             </Button>
           </div>
 
-          {/* Provider & Model */}
-          <div className="flex justify-end gap-3">
-            <Select value={selectedProvider} onValueChange={handleProviderChange}>
-              <SelectTrigger className="h-8 w-36 text-xs">
-                <SelectValue />
+          {/* API Key, Model & Provider */}
+          <div className="flex items-center justify-end gap-3">
+            {/* API Key Selector */}
+            <Select
+              value={selectedApiKeyId}
+              onValueChange={setSelectedApiKeyId}
+            >
+              <SelectTrigger className="h-8 w-44 text-xs">
+                <SelectValue placeholder="Select API Key" />
               </SelectTrigger>
               <SelectContent>
-                {HARDCODED_PROVIDERS.map((provider) => (
-                  <SelectItem key={provider.id} value={provider.id}>
-                    {provider.name}
+                {apiKeys.map((key) => (
+                  <SelectItem key={key.id} value={key.id}>
+                    {key.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
+            {/* Model Selector */}
+            <Select value={selectedModelId} onValueChange={setSelectedModelId}>
               <SelectTrigger className="h-8 w-44 text-xs">
-                <SelectValue />
+                <SelectValue placeholder="Select Model" />
               </SelectTrigger>
               <SelectContent>
-                {availableModels.map((model) => (
+                {models.map((model) => (
                   <SelectItem key={model.id} value={model.id}>
                     {model.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+
+            {/* Provider (auto-resolved, read-only) */}
+            {isLoadingProvider ? (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Loader2 className="h-3 w-3 animate-spin" />
+              </span>
+            ) : provider ? (
+              <span className="rounded-md border border-border bg-muted px-2 py-1 text-xs text-muted-foreground">
+                {provider.provider.name}
+              </span>
+            ) : null}
           </div>
         </div>
       </div>

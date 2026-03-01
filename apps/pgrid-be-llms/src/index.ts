@@ -5,10 +5,10 @@ import { Google } from "./llms/google";
 import { prisma } from "@pgrid/database";
 import { Claude } from "./llms/anthropic";
 import { OpenAi } from "./llms/chatgpt";
+import { cors } from '@elysiajs/cors'
 
 export const Messages = t.Array(
   t.Object({
-    role: t.String(),
     content: t.String()
   })
 );
@@ -22,6 +22,7 @@ export const Conversation = t.Object({
 
 const app = new Elysia()
   .use(bearer())
+  .use(cors())
   .post("/api/v1/chat/completions", async ({ status, bearer: apiKey, body }) => {
     const slug = body.slug;
 
@@ -38,8 +39,6 @@ const app = new Elysia()
     }
 
     const result = await validate(apiKey, body.slug);
-
-    console.log(">>>>>>>result", result);
 
     if (!result.ok) {
       return status(result.status, {
