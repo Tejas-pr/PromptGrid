@@ -8,10 +8,7 @@ import { OpenAi } from "./llms/chatgpt";
 
 export const Messages = t.Array(
   t.Object({
-    role: t.Enum({
-      user: "user",
-      assistant: "assistant"
-    }),
+    role: t.String(),
     content: t.String()
   })
 );
@@ -19,18 +16,18 @@ export const Messages = t.Array(
 export type Messages = typeof Messages.static;
 
 export const Conversation = t.Object({
-  model: t.String(),
+  slug: t.String(),
   messages: Messages
 });
 
 const app = new Elysia()
   .use(bearer())
   .post("/api/v1/chat/completions", async ({ status, bearer: apiKey, body }) => {
-    const model = body.model;
+    const slug = body.slug;
 
-    if (!model) {
+    if (!slug) {
       return status(401, {
-        message: "Missing model. Please provide model."
+        message: "Missing slug. Please provide slug."
       });
     }
 
@@ -40,7 +37,9 @@ const app = new Elysia()
       });
     }
 
-    const result = await validate(apiKey, body.model);
+    const result = await validate(apiKey, body.slug);
+
+    console.log(">>>>>>>result", result);
 
     if (!result.ok) {
       return status(result.status, {
@@ -48,19 +47,18 @@ const app = new Elysia()
       });
     }
 
-    let llmResponse = null;
-    if (result.provider.name === "Google") {
-      llmResponse = await Google.chat(model, body.messages);
-    }
-    if (result.provider.name === "Anthropic") {
-      llmResponse = await Claude.chat(model, body.messages);
-    }
-    if (result.provider.name === "OpenAI") {
-      llmResponse = await OpenAi.chat(model, body.messages);
-    }
-    // if (result.provider.name === "Groq") {
+    const providerName = result.provider.provider.name;
 
-    // }
+    let llmResponse = null;
+    if (providerName === "Google") {
+      llmResponse = await Google.chat(result.model, body.messages);
+    }
+    if (providerName === "Anthropic") {
+      llmResponse = await Claude.chat(result.model, body.messages);
+    }
+    if (providerName === "OpenAI") {
+      llmResponse = await OpenAi.chat(result.model, body.messages);
+    }
 
     if (!llmResponse) {
       return status(403, {
@@ -101,7 +99,9 @@ const app = new Elysia()
       body: Conversation
     }
   )
-  .listen(3002);
+
+const PORT = Number(process.env.LLM_BACKEND_PORT) || 3002;
+app.listen(PORT);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`

@@ -2,7 +2,7 @@ import { prisma } from "@pgrid/database";
 
 export const validate = async (
     apiKey: string,
-    model: string
+    slug: string
 ): Promise<any> => {
     try {
         const apiKeyRecord = await prisma.apiKey.findFirst({
@@ -12,6 +12,7 @@ export const validate = async (
                 deleted: false
             },
             select: {
+                apiKey: true,
                 user: {
                     select: {
                         id: true,
@@ -38,7 +39,9 @@ export const validate = async (
         }
 
         const modelRecord = await prisma.model.findFirst({
-            where: { slug: model }
+            where: {
+                slug
+            }
         });
 
         if (!modelRecord) {
@@ -71,7 +74,8 @@ export const validate = async (
         return {
             ok: true,
             provider,
-            apiKeyRecord
+            apiKeyRecord,
+            "model": modelRecord.name
         };
     } catch (error) {
         console.error(error);
