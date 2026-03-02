@@ -14,14 +14,13 @@ interface DashboardData {
 function DashboardHome() {
   const client = useElysiaClient()
   const router = useNavigate()
-  const [data, setData] = useState<DashboardData | null>(null)
+  const [data, setData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function fetchDashboard() {
       try {
         const dashboardData = await client.dashboard.get();
-        console.log(dashboardData);
         setData(dashboardData.data?.response)
       } catch (error) {
         console.error('Failed to fetch dashboard:', error)
@@ -96,7 +95,7 @@ function DashboardHome() {
           {/* Create API Key */}
           <Card
             className="p-6 cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all"
-            onClick={() => router('/api-keys/create')}
+            onClick={() => router('/chat/api-keys')}
           >
             <div className="flex items-start justify-between">
               <div>
@@ -115,7 +114,7 @@ function DashboardHome() {
           {/* Create Resource */}
           <Card
             className="p-6 cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all"
-            onClick={() => router('/resources/create')}
+            onClick={() => router('/chat/credits')}
           >
             <div className="flex items-start justify-between">
               <div>
